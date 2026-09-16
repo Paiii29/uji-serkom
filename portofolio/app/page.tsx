@@ -327,7 +327,7 @@ export default function Home() {
                 Website e-commerce merchandise tim esport dengan fitur katalog, keranjang, checkout, dan admin panel. Dibangun dengan Next.js & Supabase.
               </p>
               <a
-                href="http://localhost:3001"
+                href="https://esport-store-id.vercel.app/"
                 style={{
                   display: 'inline-block',
                   padding: '0.6rem 1.2rem',

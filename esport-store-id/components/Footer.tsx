@@ -57,7 +57,7 @@ export default function Footer() {
 
           {/* TOMBOL LIHAT PROFIL CEO */}
           <a
-            href="http://localhost:3000"
+            href="https://portofolio-paiii29.vercel.app/"
             className="footer-store-ceo"
           >
             <span>Lihat Profil CEO Kami</span>
