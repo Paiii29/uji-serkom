@@ -2,8 +2,10 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { useCart } from '@/context/CartContext';
+import { useAuth } from '@/context/AuthContext';
 import Navbar from '@/components/Navbar';
 
 interface Produk {
@@ -23,6 +25,9 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [toast, setToast] = useState('');
   const { addToCart } = useCart();
+  const { user } = useAuth();
+  const router = useRouter();
+  const [loginModal, setLoginModal] = useState(false);
 
   useEffect(() => {
     async function fetchProduk() {
@@ -49,14 +54,31 @@ export default function Home() {
     e.preventDefault();
     e.stopPropagation();
 
+    if (!user) {
+      setLoginModal(true);
+      return;
+    }
+
     if (p.stok <= 0) {
       alert('Stok habis');
       return;
     }
 
     addToCart(p, 1);
-    setToast(`✓ ${p.nama} ditambahkan ke keranjang`);
+    setToast(`${p.nama} ditambahkan ke keranjang`);
     setTimeout(() => setToast(''), 2500);
+  };
+
+  const tutupModal = () => setLoginModal(false);
+
+  const keLogin = () => {
+    setLoginModal(false);
+    router.push('/login');
+  };
+
+  const keDaftar = () => {
+    setLoginModal(false);
+    router.push('/register');
   };
 
   return (
@@ -126,7 +148,6 @@ export default function Home() {
                     </div>
                   </Link>
 
-                  {/* 2 TOMBOL: BELI + KERANJANG */}
                   <div className="card-produk-actions">
                     <button
                       onClick={(e) => handleTambahKeKeranjang(e, p)}
@@ -143,7 +164,11 @@ export default function Home() {
                       title="Tambah ke Keranjang"
                       style={habis ? { opacity: 0.5, cursor: 'not-allowed' } : {}}
                     >
-                      🛒
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                        <circle cx="9" cy="21" r="1"></circle>
+                        <circle cx="20" cy="21" r="1"></circle>
+                        <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+                      </svg>
                     </button>
                   </div>
                 </div>
@@ -152,6 +177,50 @@ export default function Home() {
           </div>
         )}
       </div>
+
+      {/* MODAL LOGIN REQUIRED */}
+      {loginModal && (
+        <div className="modal-overlay" onClick={tutupModal}>
+          <div
+            className="modal-content"
+            onClick={(e) => e.stopPropagation()}
+            style={{ maxWidth: '420px', textAlign: 'center', borderTop: '6px solid var(--red)' }}
+          >
+            <h2 className="modal-title" style={{ textAlign: 'center', marginBottom: '1rem' }}>
+              Login Dulu Yuk!
+            </h2>
+            <p style={{ color: 'var(--text-dim)', fontSize: '0.9rem', marginBottom: '1.5rem', lineHeight: 1.6 }}>
+              Untuk membeli produk atau menambah ke keranjang, kamu harus <strong>login</strong> terlebih dahulu.
+              <br /><br />
+              Belum punya akun? Silakan daftar dulu gratis.
+            </p>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+              <button onClick={keLogin} className="btn btn-block">
+                Login Sekarang
+              </button>
+              <button onClick={keDaftar} className="btn btn-outline btn-block">
+                Daftar Akun Baru
+              </button>
+              <button
+                onClick={tutupModal}
+                style={{
+                  background: 'transparent',
+                  border: 'none',
+                  color: 'var(--text-dim)',
+                  fontSize: '0.8rem',
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  textDecoration: 'underline',
+                  marginTop: '0.25rem',
+                }}
+              >
+                Nanti saja
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }

@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { useCart } from '@/context/CartContext';
+import { useAuth } from '@/context/AuthContext';
 import Navbar from '@/components/Navbar';
 
 interface Produk {
@@ -20,8 +21,10 @@ export default function DetailProduk() {
   const params = useParams();
   const router = useRouter();
   const { addToCart } = useCart();
+  const { user } = useAuth();
   const [produk, setProduk] = useState<Produk | null>(null);
   const [qty, setQty] = useState(1);
+  const [loginModal, setLoginModal] = useState(false);
 
   useEffect(() => {
     async function fetchProduk() {
@@ -47,6 +50,11 @@ export default function DetailProduk() {
   const habis = produk.stok <= 0;
 
   const handleAddToCart = () => {
+    if (!user) {
+      setLoginModal(true);
+      return;
+    }
+
     if (habis) {
       alert('Stok produk habis');
       return;
@@ -60,11 +68,20 @@ export default function DetailProduk() {
     router.push('/keranjang');
   };
 
+  const keLogin = () => {
+    setLoginModal(false);
+    router.push('/login');
+  };
+
+  const keDaftar = () => {
+    setLoginModal(false);
+    router.push('/register');
+  };
+
   return (
     <>
       <Navbar />
       <div className="section">
-        {/* TOMBOL TUTUP DI ATAS */}
         <button
           onClick={() => router.push('/')}
           className="btn-tutup"
@@ -82,7 +99,7 @@ export default function DetailProduk() {
             <p className="detail-harga">Rp {produk.harga.toLocaleString('id-ID')}</p>
             <p className="detail-deskripsi">{produk.deskripsi}</p>
             <p className="detail-stok" style={{ fontWeight: 800, color: habis ? 'var(--red)' : 'var(--text-dim)' }}>
-              {habis ? '❌ Stok Habis' : `✅ Stok Tersedia: ${produk.stok}`}
+              {habis ? 'Stok Habis' : `Stok Tersedia: ${produk.stok}`}
             </p>
 
             {!habis && (
@@ -114,6 +131,50 @@ export default function DetailProduk() {
           </div>
         </div>
       </div>
+
+      {/* MODAL LOGIN REQUIRED */}
+      {loginModal && (
+        <div className="modal-overlay" onClick={() => setLoginModal(false)}>
+          <div
+            className="modal-content"
+            onClick={(e) => e.stopPropagation()}
+            style={{ maxWidth: '420px', textAlign: 'center', borderTop: '6px solid var(--red)' }}
+          >
+            <h2 className="modal-title" style={{ textAlign: 'center', marginBottom: '1rem' }}>
+              Login Dulu Yuk!
+            </h2>
+            <p style={{ color: 'var(--text-dim)', fontSize: '0.9rem', marginBottom: '1.5rem', lineHeight: 1.6 }}>
+              Untuk membeli produk atau menambah ke keranjang, kamu harus <strong>login</strong> terlebih dahulu.
+              <br /><br />
+              Belum punya akun? Silakan daftar dulu gratis.
+            </p>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+              <button onClick={keLogin} className="btn btn-block">
+                Login Sekarang
+              </button>
+              <button onClick={keDaftar} className="btn btn-outline btn-block">
+                Daftar Akun Baru
+              </button>
+              <button
+                onClick={() => setLoginModal(false)}
+                style={{
+                  background: 'transparent',
+                  border: 'none',
+                  color: 'var(--text-dim)',
+                  fontSize: '0.8rem',
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  textDecoration: 'underline',
+                  marginTop: '0.25rem',
+                }}
+              >
+                Nanti saja
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }
