@@ -1,0 +1,11 @@
+{
+  "name": "uji-serkom",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "concurrently -n \"Portofolio Dafa,Esport\" -c \"cyan,red\" \"npm run dev --prefix portofolio\" \"npm run dev --prefix esport-store-id\""
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.0"
+  }
+}
