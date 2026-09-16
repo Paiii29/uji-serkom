@@ -110,14 +110,19 @@ body {
   position: sticky;
   top: 0;
   z-index: 50;
+  background: var(--black);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  border-bottom: 4px solid var(--red);
+}
+
+.admin-nav-inner {
+  max-width: 1200px;
+  margin: 0 auto;
   padding: 0 2rem;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: var(--black);
   height: 70px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-  border-bottom: 4px solid var(--red);
 }
 
 .admin-nav-logo {
@@ -127,6 +132,8 @@ body {
   text-transform: uppercase;
   letter-spacing: 2px;
   text-decoration: none;
+  display: flex;
+  align-items: center;
 }
 
 .admin-nav-logo::before {
@@ -153,6 +160,88 @@ body {
 }
 
 .admin-nav-menu a:hover { color: var(--red); }
+
+/* TOMBOL HAMBURGER (default: hidden) */
+.admin-nav-toggle {
+  display: none;
+  background: transparent;
+  border: none;
+  color: #ffffff;
+  cursor: pointer;
+  padding: 0.5rem;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.3s;
+}
+
+.admin-nav-toggle:hover { color: var(--red); }
+
+/* MOBILE MENU (default: hidden) */
+.admin-nav-mobile {
+  display: none;
+  overflow: hidden;
+  max-height: 0;
+  transition: max-height 0.3s ease-out;
+  background: var(--black);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.admin-nav-mobile.open {
+  max-height: 500px;
+  transition: max-height 0.4s ease-in;
+}
+
+.admin-nav-mobile ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.admin-nav-mobile li {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.admin-nav-mobile a {
+  display: block;
+  padding: 1rem 1.5rem;
+  color: #ffffff;
+  text-decoration: none;
+  font-weight: 700;
+  text-transform: uppercase;
+  font-size: 0.85rem;
+  letter-spacing: 1.5px;
+  transition: all 0.3s;
+}
+
+.admin-nav-mobile a:hover,
+.admin-nav-mobile a:active {
+  background: rgba(230, 0, 18, 0.15);
+  color: var(--red);
+  padding-left: 2rem;
+}
+
+.nav-logout-mobile {
+  display: block;
+  width: 100%;
+  padding: 1rem 1.5rem;
+  background: transparent;
+  border: none;
+  color: #ffffff;
+  font-weight: 700;
+  text-transform: uppercase;
+  font-size: 0.85rem;
+  letter-spacing: 1.5px;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.3s;
+  font-family: inherit;
+}
+
+.nav-logout-mobile:hover {
+  background: rgba(230, 0, 18, 0.15);
+  color: var(--red);
+  padding-left: 2rem;
+}
 
 /* ============ HERO ============ */
 .hero {
@@ -432,7 +521,6 @@ body {
   border-color: #b91c1c;
 }
 
-/* ============ TOMBOL TUTUP DETAIL ============ */
 .btn-tutup {
   display: inline-flex;
   align-items: center;
@@ -455,7 +543,6 @@ body {
   color: #ffffff;
 }
 
-/* ============ TOMBOL CLOSE CHECKOUT ============ */
 .btn-close {
   width: 38px;
   height: 38px;
@@ -1307,34 +1394,42 @@ body {
 
 /* ============ RESPONSIVE ============ */
 @media (max-width: 768px) {
-  .navbar, .admin-navbar {
+  .navbar {
     padding: 0 1rem;
     height: 60px;
   }
-  .nav-menu, .admin-nav-menu {
+
+  .nav-menu {
     gap: 0.6rem;
   }
-  .nav-menu a, .admin-nav-menu a { font-size: 0.7rem; }
+  .nav-menu a { font-size: 0.7rem; }
+
   .section { padding: 1.5rem 1rem; }
   .section-title { font-size: 1.2rem; }
   .search-box { max-width: 100%; }
+
   .detail-grid {
     grid-template-columns: 1fr;
     gap: 1.5rem;
   }
+
   .cart-item { flex-wrap: wrap; }
   .admin-header { flex-direction: column; align-items: flex-start; }
+
   .toast {
     top: 70px;
     font-size: 0.75rem;
     padding: 0.7rem 1rem;
   }
+
   .hero-title { font-size: 1.6rem; }
   .hero-sub { font-size: 0.85rem; }
+
   .grid-produk {
     grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
     gap: 1rem;
   }
+
   .footer-store {
     padding: 2rem 1.25rem 1rem;
   }
@@ -1342,6 +1437,28 @@ body {
     grid-template-columns: 1fr;
     gap: 1.5rem;
     margin-bottom: 1.5rem;
+  }
+
+  /* ===== ADMIN NAVBAR RESPONSIVE ===== */
+  .admin-nav-inner {
+    padding: 0 1rem;
+    height: 60px;
+  }
+
+  .admin-nav-logo {
+    font-size: 1rem;
+  }
+
+  .admin-nav-menu {
+    display: none;
+  }
+
+  .admin-nav-toggle {
+    display: flex;
+  }
+
+  .admin-nav-mobile {
+    display: block;
   }
 }
 
