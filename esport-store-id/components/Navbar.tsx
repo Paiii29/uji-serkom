@@ -13,6 +13,8 @@ export default function Navbar() {
 
   const handleLogout = () => {
     logout();
+    // Trigger event biar CartContext reset
+    window.dispatchEvent(new Event('user-logout'));
     router.push('/');
   };
 
@@ -29,7 +31,11 @@ export default function Navbar() {
         </li>
         {user ? (
           <>
-            <li><span style={{ color: '#fff', fontWeight: 700, fontSize: '0.8rem' }}>Hai, {user.nama}</span></li>
+            <li>
+              <span style={{ color: '#fff', fontWeight: 700, fontSize: '0.8rem' }}>
+                Hai, {user.nama}
+              </span>
+            </li>
             {user.role === 'admin' || user.role === 'superadmin' ? (
               <li><Link href="/admin/dashboard">Dashboard</Link></li>
             ) : null}

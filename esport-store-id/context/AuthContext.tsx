@@ -33,6 +33,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = () => {
     setUser(null);
     localStorage.removeItem('user-esport');
+    // Hapus keranjang biar tidak nyangkut
+    localStorage.removeItem('cart-esport');
+    // Hapus pilihan checkout juga
+    localStorage.removeItem('checkout-items');
   };
 
   return (

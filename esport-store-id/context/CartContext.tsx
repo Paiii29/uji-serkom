@@ -23,7 +23,6 @@ interface CartContextType {
   updateQty: (id: number, qty: number) => void;
   clearCart: () => void;
   totalHarga: number;
-  // Untuk checkout partial
   checkoutItems: CartItem[];
   setCheckoutItems: (items: CartItem[]) => void;
   hapusItemCheckout: (ids: number[]) => void;
@@ -49,12 +48,37 @@ export function CartProvider({ children }: { children: ReactNode }) {
     setLoaded(true);
   }, []);
 
-  // Simpan ke localStorage hanya setelah loaded
+  // Simpan ke localStorage setiap kali cart berubah
   useEffect(() => {
     if (loaded) {
       localStorage.setItem('cart-esport', JSON.stringify(cart));
     }
   }, [cart, loaded]);
+
+  // Dengerin perubahan user (login/logout) dari localStorage
+  useEffect(() => {
+    const checkUser = () => {
+      const userData = localStorage.getItem('user-esport');
+      if (!userData) {
+        // User logout → reset cart
+        setCart([]);
+        setCheckoutItems([]);
+      }
+    };
+
+    // Cek setiap 500ms
+    const interval = setInterval(checkUser, 500);
+
+    // Dengerin event custom dari AuthContext logout
+    window.addEventListener('storage', checkUser);
+    window.addEventListener('user-logout', checkUser);
+
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('storage', checkUser);
+      window.removeEventListener('user-logout', checkUser);
+    };
+  }, []);
 
   const addToCart = (produk: Produk, qty: number) => {
     setCart((prev) => {
@@ -80,7 +104,6 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   const clearCart = () => setCart([]);
 
-  // Hapus item tertentu dari keranjang (setelah checkout sukses)
   const hapusItemCheckout = (ids: number[]) => {
     setCart((prev) => prev.filter((item) => !ids.includes(item.id)));
   };
