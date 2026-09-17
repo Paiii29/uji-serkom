@@ -20,14 +20,12 @@ export default function Keranjang() {
   const [selected, setSelected] = useState<number[]>([]);
   const [loadingStok, setLoadingStok] = useState(true);
 
-  // Set default: semua produk terpilih saat pertama load
   useEffect(() => {
     if (cart.length > 0 && selected.length === 0) {
       setSelected(cart.map((item) => item.id));
     }
   }, [cart, selected.length]);
 
-  // Fetch stok terbaru dari Supabase
   useEffect(() => {
     async function fetchStok() {
       if (cart.length === 0) {
@@ -71,7 +69,6 @@ export default function Keranjang() {
     0
   );
 
-  // Cek apakah ada masalah stok di produk yang dipilih
   const produkBermasalah = cart.filter((item) => {
     const stok = getStok(item.id);
     return stok !== null && (stok <= 0 || item.qty > stok);
@@ -99,6 +96,19 @@ export default function Keranjang() {
       <>
         <Navbar />
         <div className="section">
+          <div className="section-header-with-close">
+            <div>
+              <h2 className="section-title">Keranjang <span>Belanja</span></h2>
+              <div className="divider"></div>
+            </div>
+            <button
+              onClick={() => router.push('/')}
+              className="btn-close"
+              title="Kembali ke Beranda"
+            >
+              ✕
+            </button>
+          </div>
           <div className="empty-state">
             <p className="empty-state-title">Keranjang Kosong</p>
             <Link href="/" className="btn">Kembali Belanja</Link>
@@ -114,10 +124,21 @@ export default function Keranjang() {
     <>
       <Navbar />
       <div className="section">
-        <h2 className="section-title">Keranjang <span>Belanja</span></h2>
-        <div className="divider"></div>
+        {/* HEADER DENGAN TOMBOL CLOSE */}
+        <div className="section-header-with-close">
+          <div>
+            <h2 className="section-title">Keranjang <span>Belanja</span></h2>
+            <div className="divider"></div>
+          </div>
+          <button
+            onClick={() => router.push('/')}
+            className="btn-close"
+            title="Kembali ke Beranda"
+          >
+            ✕
+          </button>
+        </div>
 
-        {/* Warning kalau ada produk habis */}
         {adaMasalah && (
           <div className="alert alert-error" style={{ marginBottom: '1.5rem' }}>
             <strong>Perhatian!</strong> Ada {produkBermasalah.length} produk di keranjang yang sudah habis atau stoknya tidak cukup. Hapus produk tersebut atau kurangi jumlahnya untuk melanjutkan checkout.
@@ -164,7 +185,6 @@ export default function Keranjang() {
                 disabled={adaIsu}
               />
 
-              {/* FOTO dengan overlay kalau stok habis */}
               <div className="cart-item-img-wrap">
                 <img src={item.gambar} alt={item.nama} className="cart-item-img" />
                 {habisTotal && (

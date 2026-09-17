@@ -1663,3 +1663,15 @@ body {
   text-decoration: line-through;
   color: var(--text-dim);
 }
+/* ============ SECTION HEADER DENGAN TOMBOL CLOSE ============ */
+.section-header-with-close {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.section-header-with-close .divider {
+  margin-bottom: 1.75rem;
+}
