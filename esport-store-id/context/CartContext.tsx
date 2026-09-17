@@ -30,55 +30,77 @@ interface CartContextType {
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
+// Helper: dapatkan key localStorage berdasarkan user
+function getCartKey(): string {
+  if (typeof window === 'undefined') return 'cart-esport-guest';
+  const userData = localStorage.getItem('user-esport');
+  if (!userData) return 'cart-esport-guest';
+  try {
+    const user = JSON.parse(userData);
+    return `cart-esport-${user.id}`;
+  } catch {
+    return 'cart-esport-guest';
+  }
+}
+
 export function CartProvider({ children }: { children: ReactNode }) {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [checkoutItems, setCheckoutItems] = useState<CartItem[]>([]);
   const [loaded, setLoaded] = useState(false);
+  const [currentKey, setCurrentKey] = useState<string>('cart-esport-guest');
 
-  // Load dari localStorage saat pertama kali
+  // Load cart dari localStorage sesuai user
   useEffect(() => {
-    const saved = localStorage.getItem('cart-esport');
+    const key = getCartKey();
+    setCurrentKey(key);
+    const saved = localStorage.getItem(key);
     if (saved) {
       try {
         setCart(JSON.parse(saved));
       } catch (e) {
         console.error('Gagal load cart:', e);
       }
+    } else {
+      setCart([]);
     }
     setLoaded(true);
+  }, []);
+
+  // Dengerin perubahan login/logout
+  useEffect(() => {
+    const handleUserChange = () => {
+      const key = getCartKey();
+      setCurrentKey(key);
+      const saved = localStorage.getItem(key);
+      if (saved) {
+        try {
+          setCart(JSON.parse(saved));
+        } catch {
+          setCart([]);
+        }
+      } else {
+        setCart([]);
+      }
+      setCheckoutItems([]);
+    };
+
+    window.addEventListener('user-login', handleUserChange);
+    window.addEventListener('user-logout', handleUserChange);
+    window.addEventListener('storage', handleUserChange);
+
+    return () => {
+      window.removeEventListener('user-login', handleUserChange);
+      window.removeEventListener('user-logout', handleUserChange);
+      window.removeEventListener('storage', handleUserChange);
+    };
   }, []);
 
   // Simpan ke localStorage setiap kali cart berubah
   useEffect(() => {
     if (loaded) {
-      localStorage.setItem('cart-esport', JSON.stringify(cart));
+      localStorage.setItem(currentKey, JSON.stringify(cart));
     }
-  }, [cart, loaded]);
-
-  // Dengerin perubahan user (login/logout) dari localStorage
-  useEffect(() => {
-    const checkUser = () => {
-      const userData = localStorage.getItem('user-esport');
-      if (!userData) {
-        // User logout → reset cart
-        setCart([]);
-        setCheckoutItems([]);
-      }
-    };
-
-    // Cek setiap 500ms
-    const interval = setInterval(checkUser, 500);
-
-    // Dengerin event custom dari AuthContext logout
-    window.addEventListener('storage', checkUser);
-    window.addEventListener('user-logout', checkUser);
-
-    return () => {
-      clearInterval(interval);
-      window.removeEventListener('storage', checkUser);
-      window.removeEventListener('user-logout', checkUser);
-    };
-  }, []);
+  }, [cart, loaded, currentKey]);
 
   const addToCart = (produk: Produk, qty: number) => {
     setCart((prev) => {

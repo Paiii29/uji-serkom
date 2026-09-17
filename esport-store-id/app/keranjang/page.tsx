@@ -18,6 +18,7 @@ export default function Keranjang() {
   const router = useRouter();
   const [stokData, setStokData] = useState<StokProduk[]>([]);
   const [selected, setSelected] = useState<number[]>([]);
+  const [loadingStok, setLoadingStok] = useState(true);
 
   // Set default: semua produk terpilih saat pertama load
   useEffect(() => {
@@ -26,15 +27,21 @@ export default function Keranjang() {
     }
   }, [cart, selected.length]);
 
+  // Fetch stok terbaru dari Supabase
   useEffect(() => {
     async function fetchStok() {
-      if (cart.length === 0) return;
+      if (cart.length === 0) {
+        setLoadingStok(false);
+        return;
+      }
+      setLoadingStok(true);
       const ids = cart.map((item) => item.id);
       const { data } = await supabase
         .from('produk')
         .select('id, stok, nama')
         .in('id', ids);
       setStokData(data || []);
+      setLoadingStok(false);
     }
     fetchStok();
   }, [cart]);
@@ -64,17 +71,25 @@ export default function Keranjang() {
     0
   );
 
-  const adaMasalah = cart.some((item) => {
+  // Cek apakah ada masalah stok di produk yang dipilih
+  const produkBermasalah = cart.filter((item) => {
     const stok = getStok(item.id);
-    return stok !== null && item.qty > stok;
+    return stok !== null && (stok <= 0 || item.qty > stok);
   });
 
+  const adaMasalah = produkBermasalah.length > 0;
+
   const bisaCheckout =
-    selected.length > 0 && !adaMasalah && produkDipilih.length > 0;
+    selected.length > 0 &&
+    !adaMasalah &&
+    produkDipilih.length > 0 &&
+    produkDipilih.every((item) => {
+      const stok = getStok(item.id);
+      return stok !== null && stok >= item.qty;
+    });
 
   const handleLanjutCheckout = () => {
     if (!bisaCheckout) return;
-    // Simpan produk terpilih ke state global (bukan localStorage)
     setCheckoutItems(produkDipilih);
     router.push('/checkout');
   };
@@ -102,6 +117,13 @@ export default function Keranjang() {
         <h2 className="section-title">Keranjang <span>Belanja</span></h2>
         <div className="divider"></div>
 
+        {/* Warning kalau ada produk habis */}
+        {adaMasalah && (
+          <div className="alert alert-error" style={{ marginBottom: '1.5rem' }}>
+            <strong>Perhatian!</strong> Ada {produkBermasalah.length} produk di keranjang yang sudah habis atau stoknya tidak cukup. Hapus produk tersebut atau kurangi jumlahnya untuk melanjutkan checkout.
+          </div>
+        )}
+
         <div className="cart-pilih-semua">
           <label className="cart-checkbox-label">
             <input
@@ -116,19 +138,22 @@ export default function Keranjang() {
 
         {cart.map((item) => {
           const stok = getStok(item.id);
-          const overQty = stok !== null && item.qty > stok;
+          const habisTotal = stok !== null && stok <= 0;
+          const kurangStok = stok !== null && stok > 0 && item.qty > stok;
+          const adaIsu = habisTotal || kurangStok;
           const isSelected = selected.includes(item.id);
+
           return (
             <div
               key={item.id}
-              className="cart-item"
+              className={`cart-item ${adaIsu ? 'cart-item-habis' : ''}`}
               style={{
-                borderLeft: overQty
+                borderLeft: adaIsu
                   ? '4px solid var(--red)'
                   : isSelected
                   ? '4px solid var(--red)'
                   : '4px solid transparent',
-                opacity: isSelected ? 1 : 0.6,
+                opacity: adaIsu ? 0.85 : isSelected ? 1 : 0.6,
               }}
             >
               <input
@@ -136,33 +161,52 @@ export default function Keranjang() {
                 checked={isSelected}
                 onChange={() => toggleSelected(item.id)}
                 className="cart-checkbox"
+                disabled={adaIsu}
               />
-              <img src={item.gambar} alt={item.nama} className="cart-item-img" />
+
+              {/* FOTO dengan overlay kalau stok habis */}
+              <div className="cart-item-img-wrap">
+                <img src={item.gambar} alt={item.nama} className="cart-item-img" />
+                {habisTotal && (
+                  <div className="cart-item-overlay">
+                    <span>STOK HABIS</span>
+                  </div>
+                )}
+              </div>
+
               <div className="cart-item-info">
                 <p className="cart-item-nama">{item.nama}</p>
                 <p className="cart-item-harga">Rp {item.harga.toLocaleString('id-ID')}</p>
+
                 {stok !== null && (
                   <p
                     style={{
                       fontSize: '0.75rem',
-                      color: overQty ? 'var(--red)' : 'var(--text-dim)',
+                      color: adaIsu ? 'var(--red)' : 'var(--text-dim)',
                       marginTop: '0.3rem',
                       fontWeight: 700,
                     }}
                   >
-                    {overQty ? `⚠️ Stok tersisa: ${stok}` : `Stok tersedia: ${stok}`}
+                    {habisTotal
+                      ? 'Stok Habis - Silakan hapus produk ini'
+                      : kurangStok
+                      ? `Stok tersisa: ${stok} (Anda minta ${item.qty})`
+                      : `Stok tersedia: ${stok}`}
                   </p>
                 )}
               </div>
+
               <input
                 type="number"
                 min="1"
-                max={stok || undefined}
+                max={stok && stok > 0 ? stok : undefined}
                 value={item.qty}
                 onChange={(e) => updateQty(item.id, Number(e.target.value))}
                 className="qty-input"
-                style={overQty ? { borderColor: 'var(--red)' } : {}}
+                style={adaIsu ? { borderColor: 'var(--red)' } : {}}
+                disabled={habisTotal}
               />
+
               <button
                 onClick={() => removeFromCart(item.id)}
                 style={{
@@ -189,12 +233,6 @@ export default function Keranjang() {
           </p>
         </div>
 
-        {adaMasalah && (
-          <div className="alert alert-error" style={{ marginTop: '1.5rem' }}>
-            ⚠️ Ada produk yang melebihi stok. Silakan kurangi jumlah atau hapus produk.
-          </div>
-        )}
-
         {selected.length === 0 && (
           <div className="alert alert-error" style={{ marginTop: '1.5rem' }}>
             Pilih minimal 1 produk untuk checkout.
@@ -208,7 +246,9 @@ export default function Keranjang() {
               className="btn"
               style={{ opacity: 0.5, cursor: 'not-allowed' }}
             >
-              {adaMasalah ? 'Perbaiki Keranjang Dulu' : 'Pilih Produk Dulu'}
+              {adaMasalah
+                ? 'Perbaiki Keranjang Dulu'
+                : 'Pilih Produk Dulu'}
             </button>
           ) : (
             <button onClick={handleLanjutCheckout} className="btn">

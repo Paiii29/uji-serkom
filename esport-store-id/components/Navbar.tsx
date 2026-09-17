@@ -13,8 +13,6 @@ export default function Navbar() {
 
   const handleLogout = () => {
     logout();
-    // Trigger event biar CartContext reset
-    window.dispatchEvent(new Event('user-logout'));
     router.push('/');
   };
 

@@ -28,15 +28,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = (userData: User) => {
     setUser(userData);
     localStorage.setItem('user-esport', JSON.stringify(userData));
+    // Trigger event biar CartContext load keranjang user ini
+    window.dispatchEvent(new Event('user-login'));
   };
 
   const logout = () => {
     setUser(null);
     localStorage.removeItem('user-esport');
-    // Hapus keranjang biar tidak nyangkut
-    localStorage.removeItem('cart-esport');
-    // Hapus pilihan checkout juga
-    localStorage.removeItem('checkout-items');
+    // JANGAN hapus keranjang! Biar tetap tersimpan per-user
+    // Trigger event biar CartContext switch ke cart guest
+    window.dispatchEvent(new Event('user-logout'));
   };
 
   return (

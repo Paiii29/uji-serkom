@@ -34,6 +34,8 @@ export default function LoginPage() {
         nama: adminData.nama,
         role: adminData.role,
       });
+      // Trigger event biar CartContext load keranjang user ini
+      window.dispatchEvent(new Event('user-login'));
       router.push('/admin/dashboard');
       setLoading(false);
       return;
@@ -54,6 +56,8 @@ export default function LoginPage() {
         nama: customerData.nama,
         role: 'customer',
       });
+      // Trigger event biar CartContext load keranjang user ini
+      window.dispatchEvent(new Event('user-login'));
       router.push('/');
       setLoading(false);
       return;
