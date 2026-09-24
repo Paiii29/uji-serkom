@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/context/AuthContext';
 import AdminNavbar from '@/components/AdminNavbar';
+import AlertModal from '@/components/AlertModal';
 
 interface Admin {
   id: number;
@@ -21,6 +22,37 @@ export default function KelolaAdmin() {
   const [modalOpen, setModalOpen] = useState(false);
   const [form, setForm] = useState({ email: '', password: '', nama: '', role: 'admin' });
   const [loading, setLoading] = useState(false);
+
+  // Alert state
+  const [alertOpen, setAlertOpen] = useState(false);
+  const [alertType, setAlertType] = useState<'warning' | 'error' | 'success' | 'info' | 'confirm'>('warning');
+  const [alertTitle, setAlertTitle] = useState('');
+  const [alertMessage, setAlertMessage] = useState('');
+  const [alertConfirmAction, setAlertConfirmAction] = useState<(() => void) | null>(null);
+  const [alertShowCancel, setAlertShowCancel] = useState(false);
+
+  const showAlert = (type: 'warning' | 'error' | 'success' | 'info', title: string, message: string) => {
+    setAlertType(type);
+    setAlertTitle(title);
+    setAlertMessage(message);
+    setAlertConfirmAction(null);
+    setAlertShowCancel(false);
+    setAlertOpen(true);
+  };
+
+  const showConfirm = (title: string, message: string, onConfirm: () => void) => {
+    setAlertType('confirm');
+    setAlertTitle(title);
+    setAlertMessage(message);
+    setAlertConfirmAction(() => onConfirm);
+    setAlertShowCancel(true);
+    setAlertOpen(true);
+  };
+
+  const closeAlert = () => {
+    setAlertOpen(false);
+    setAlertConfirmAction(null);
+  };
 
   const fetchAdmins = async () => {
     const { data } = await supabase.from('admin').select('*').order('id');
@@ -41,25 +73,35 @@ export default function KelolaAdmin() {
 
     const { error } = await supabase.from('admin').insert(form);
     if (error) {
-      alert('Gagal tambah admin: ' + error.message);
+      showAlert('error', 'Gagal Tambah', error.message);
     } else {
-      alert('Admin baru berhasil ditambahkan!');
       setModalOpen(false);
       setForm({ email: '', password: '', nama: '', role: 'admin' });
+      showAlert('success', 'Berhasil', 'Admin baru berhasil ditambahkan.');
       fetchAdmins();
     }
     setLoading(false);
   };
 
-  const handleHapus = async (id: number, role: string) => {
+  const handleHapus = async (id: number, role: string, nama: string) => {
     if (role === 'superadmin') {
-      alert('Tidak bisa hapus superadmin!');
+      showAlert('warning', 'Tidak Bisa Dihapus', 'Superadmin tidak bisa dihapus!');
       return;
     }
-    if (!confirm('Yakin hapus admin ini?')) return;
-    const { error } = await supabase.from('admin').delete().eq('id', id);
-    if (error) alert('Gagal hapus: ' + error.message);
-    else fetchAdmins();
+
+    showConfirm(
+      'Hapus Admin?',
+      `Yakin ingin menghapus admin "${nama}"?\n\nTindakan ini tidak dapat dibatalkan.`,
+      async () => {
+        const { error } = await supabase.from('admin').delete().eq('id', id);
+        if (error) {
+          showAlert('error', 'Gagal Hapus', error.message);
+        } else {
+          showAlert('success', 'Berhasil', `Admin "${nama}" berhasil dihapus.`);
+          fetchAdmins();
+        }
+      }
+    );
   };
 
   if (!user || user.role !== 'superadmin') return null;
@@ -85,7 +127,7 @@ export default function KelolaAdmin() {
               <p style={{ fontSize: '0.85rem', color: 'var(--text-dim)', marginBottom: '1rem' }}>{a.email}</p>
               {a.role !== 'superadmin' && (
                 <div className="produk-admin-actions">
-                  <button onClick={() => handleHapus(a.id, a.role)} className="btn btn-sm btn-danger">Hapus</button>
+                  <button onClick={() => handleHapus(a.id, a.role, a.nama)} className="btn btn-sm btn-danger">Hapus</button>
                 </div>
               )}
               {a.role === 'superadmin' && (
@@ -98,7 +140,6 @@ export default function KelolaAdmin() {
         </div>
       </div>
 
-      {/* MODAL TAMBAH ADMIN */}
       {modalOpen && (
         <div className="modal-overlay" onClick={() => setModalOpen(false)}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
@@ -136,6 +177,17 @@ export default function KelolaAdmin() {
           </div>
         </div>
       )}
+
+      <AlertModal
+        open={alertOpen}
+        type={alertType}
+        title={alertTitle}
+        message={alertMessage}
+        onClose={closeAlert}
+        onConfirm={alertConfirmAction || undefined}
+        showCancel={alertShowCancel}
+        confirmText={alertShowCancel ? 'Ya, Hapus' : 'Mengerti'}
+      />
     </div>
   );
 }

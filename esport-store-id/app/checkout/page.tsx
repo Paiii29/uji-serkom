@@ -11,11 +11,27 @@ export default function Checkout() {
   const { cart, checkoutItems, setCheckoutItems, hapusItemCheckout } = useCart();
   const { user } = useAuth();
   const router = useRouter();
-  const [form, setForm] = useState({ nama: '', email: '', telepon: '', alamat: '' });
+
+  const [form, setForm] = useState({
+    nama: '',
+    email: '',
+    telepon: '',
+    alamat: '',
+  });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
 
-  // Fallback: kalau checkoutItems kosong, pakai semua cart
+  // Auto-fill nama & email dari user yang login
+  useEffect(() => {
+    if (user) {
+      setForm((prev) => ({
+        ...prev,
+        nama: prev.nama || user.nama || '',
+        email: prev.email || user.email || '',
+      }));
+    }
+  }, [user]);
+
   const items = checkoutItems.length > 0 ? checkoutItems : cart;
   const total = items.reduce((sum, item) => sum + item.harga * item.qty, 0);
 
@@ -29,12 +45,8 @@ export default function Checkout() {
     return Object.keys(err).length === 0;
   };
 
-  // ============================================
-  // TOMBOL CLOSE — HANYA balik ke keranjang
-  // TIDAK menghapus apapun dari cart
-  // ============================================
   const handleClose = () => {
-    setCheckoutItems([]);  // reset pilihan checkout
+    setCheckoutItems([]);
     router.push('/keranjang');
   };
 
@@ -42,7 +54,6 @@ export default function Checkout() {
     e.preventDefault();
     if (!validate()) return;
 
-    // Cek stok
     for (const item of items) {
       const { data: produkDb } = await supabase
         .from('produk')
@@ -62,7 +73,6 @@ export default function Checkout() {
 
     setLoading(true);
 
-    // Insert transaksi
     const { data: trx, error: trxError } = await supabase
       .from('transaksi')
       .insert({
@@ -80,7 +90,6 @@ export default function Checkout() {
       return;
     }
 
-    // Update stok
     for (const item of items) {
       const { data: produkDb } = await supabase
         .from('produk')
@@ -94,14 +103,12 @@ export default function Checkout() {
       }
     }
 
-    // Hapus HANYA item yang di-checkout dari keranjang
     const idCheckout = items.map((i) => i.id);
     hapusItemCheckout(idCheckout);
     setCheckoutItems([]);
 
     setLoading(false);
-    alert(`Checkout berhasil!\nID Transaksi: ${trx.id}`);
-    router.push('/');
+    router.push(`/struk/${trx.id}`);
   };
 
   if (items.length === 0) {
@@ -124,7 +131,6 @@ export default function Checkout() {
     <>
       <Navbar />
       <div className="section" style={{ maxWidth: '700px' }}>
-        {/* HEADER DENGAN TOMBOL CLOSE */}
         <div
           style={{
             display: 'flex',
@@ -144,7 +150,6 @@ export default function Checkout() {
           </button>
         </div>
 
-        {/* LIST PRODUK YANG DICHECKOUT */}
         <div
           style={{
             background: '#f5f5f5',
@@ -192,8 +197,12 @@ export default function Checkout() {
               type="text"
               className="form-input"
               value={form.nama}
-              onChange={(e) => setForm({ ...form, nama: e.target.value })}
+              readOnly
+              style={{ background: '#f5f5f5', cursor: 'not-allowed' }}
             />
+            <p style={{ fontSize: '0.75rem', color: 'var(--text-dim)', marginTop: '0.3rem' }}>
+              Nama otomatis dari akun kamu
+            </p>
             {errors.nama && <p className="form-error">{errors.nama}</p>}
           </div>
 
@@ -203,19 +212,29 @@ export default function Checkout() {
               type="text"
               className="form-input"
               value={form.email}
-              onChange={(e) => setForm({ ...form, email: e.target.value })}
+              readOnly
+              style={{ background: '#f5f5f5', cursor: 'not-allowed' }}
+              autoComplete="off"
             />
+            <p style={{ fontSize: '0.75rem', color: 'var(--text-dim)', marginTop: '0.3rem' }}>
+              Email otomatis dari akun kamu
+            </p>
             {errors.email && <p className="form-error">{errors.email}</p>}
           </div>
 
           <div className="form-group">
-            <label className="form-label">Nomor Telepon</label>
+            <label className="form-label">Nomor Telepon Penerima</label>
             <input
               type="text"
               className="form-input"
               value={form.telepon}
               onChange={(e) => setForm({ ...form, telepon: e.target.value })}
+              placeholder="Contoh: 08123456789"
+              autoComplete="off"
             />
+            <p style={{ fontSize: '0.75rem', color: 'var(--text-dim)', marginTop: '0.3rem' }}>
+              Bisa diisi nomor HP penerima (kalau dikirim ke orang lain)
+            </p>
             {errors.telepon && <p className="form-error">{errors.telepon}</p>}
           </div>
 
@@ -226,7 +245,12 @@ export default function Checkout() {
               rows={4}
               value={form.alamat}
               onChange={(e) => setForm({ ...form, alamat: e.target.value })}
+              placeholder="Alamat lengkap penerima"
+              autoComplete="off"
             />
+            <p style={{ fontSize: '0.75rem', color: 'var(--text-dim)', marginTop: '0.3rem' }}>
+              Bisa diisi alamat teman/keluarga (kalau dikirim ke orang lain)
+            </p>
             {errors.alamat && <p className="form-error">{errors.alamat}</p>}
           </div>
 

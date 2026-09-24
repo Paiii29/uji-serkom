@@ -161,7 +161,6 @@ body {
 
 .admin-nav-menu a:hover { color: var(--red); }
 
-/* TOMBOL HAMBURGER (default: hidden) */
 .admin-nav-toggle {
   display: none;
   background: transparent;
@@ -176,7 +175,6 @@ body {
 
 .admin-nav-toggle:hover { color: var(--red); }
 
-/* MOBILE MENU (default: hidden) */
 .admin-nav-mobile {
   display: none;
   overflow: hidden;
@@ -1392,6 +1390,442 @@ body {
   flex-shrink: 0;
 }
 
+/* ============ CART ITEM DENGAN OVERLAY STOK HABIS ============ */
+.cart-item-img-wrap {
+  position: relative;
+  width: 90px;
+  aspect-ratio: 4 / 3;
+  flex-shrink: 0;
+  overflow: hidden;
+}
+
+.cart-item-img-wrap .cart-item-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  background: var(--gray);
+  display: block;
+}
+
+.cart-item-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
+}
+
+.cart-item-overlay span {
+  color: #ffffff;
+  font-size: 0.65rem;
+  font-weight: 900;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  text-align: center;
+  padding: 0 0.25rem;
+  line-height: 1.2;
+}
+
+.cart-item-habis {
+  background: #fff5f5;
+}
+
+.cart-item-habis .cart-item-nama {
+  text-decoration: line-through;
+  color: var(--text-dim);
+}
+
+/* ============ SECTION HEADER DENGAN TOMBOL CLOSE ============ */
+.section-header-with-close {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.section-header-with-close .divider {
+  margin-bottom: 1.75rem;
+}
+
+/* ============ STRUK TRANSAKSI ============ */
+.struk-actions {
+  max-width: 600px;
+  margin: 2rem auto 1rem;
+  display: flex;
+  gap: 0.75rem;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.struk-wrapper {
+  max-width: 600px;
+  margin: 0 auto 3rem;
+  padding: 0 1rem;
+}
+
+.struk-box {
+  background: #ffffff;
+  border: 1px solid var(--gray-border);
+  border-top: 4px solid var(--red);
+  padding: 2rem;
+  font-family: 'Courier New', monospace;
+  color: var(--text);
+}
+
+.struk-header {
+  text-align: center;
+  margin-bottom: 1rem;
+}
+
+.struk-header h1 {
+  font-size: 1.3rem;
+  font-weight: 900;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--red);
+  margin: 0 0 0.5rem 0;
+}
+
+.struk-header p {
+  font-size: 0.75rem;
+  margin: 0.15rem 0;
+  color: var(--text-dim);
+}
+
+.struk-divider {
+  border-top: 1px dashed #999;
+  margin: 1rem 0;
+}
+
+.struk-info p,
+.struk-pembeli p {
+  font-size: 0.85rem;
+  margin: 0.3rem 0;
+  line-height: 1.5;
+}
+
+.struk-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.8rem;
+}
+
+.struk-table th {
+  text-align: left;
+  border-bottom: 1px solid #999;
+  padding: 0.5rem 0.25rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  font-size: 0.7rem;
+  letter-spacing: 1px;
+}
+
+.struk-table td {
+  padding: 0.5rem 0.25rem;
+  border-bottom: 1px dashed #ddd;
+}
+
+.struk-table td:last-child,
+.struk-table th:last-child {
+  text-align: right;
+}
+
+.struk-total {
+  text-align: right;
+}
+
+.struk-total p {
+  margin: 0.25rem 0;
+  font-size: 0.9rem;
+}
+
+.struk-total-amount {
+  font-size: 1.4rem;
+  font-weight: 900;
+  color: var(--red);
+}
+
+.struk-footer {
+  text-align: center;
+  margin-top: 1rem;
+}
+
+.struk-footer p {
+  font-size: 0.75rem;
+  margin: 0.25rem 0;
+  color: var(--text-dim);
+}
+
+/* ============ CHART DASHBOARD ============ */
+.chart-card {
+  background: #ffffff;
+  border: 1px solid var(--gray-border);
+  border-top: 4px solid var(--red);
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+
+.chart-title {
+  font-size: 1rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  margin-bottom: 1.25rem;
+  color: var(--text);
+  padding-bottom: 0.75rem;
+  border-bottom: 2px solid var(--gray-border);
+}
+
+/* ============ RIWAYAT TRANSAKSI CUSTOMER ============ */
+.riwayat-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 1.25rem;
+}
+
+.riwayat-card {
+  background: #ffffff;
+  border: 1px solid var(--gray-border);
+  border-top: 4px solid var(--red);
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  transition: all 0.3s;
+}
+
+.riwayat-card:hover {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+  transform: translateY(-2px);
+}
+
+.riwayat-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--gray-border);
+}
+
+.riwayat-id {
+  font-size: 0.95rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--text);
+  margin: 0 0 0.25rem 0;
+}
+
+.riwayat-tanggal {
+  font-size: 0.75rem;
+  color: var(--text-dim);
+  margin: 0;
+}
+
+.riwayat-items-preview {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+  align-items: center;
+}
+
+.riwayat-item-img {
+  width: 60px;
+  height: 45px;
+  object-fit: cover;
+  border: 1px solid var(--gray-border);
+  background: var(--gray);
+}
+
+.riwayat-item-more {
+  width: 60px;
+  height: 45px;
+  background: var(--gray);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 900;
+  font-size: 0.85rem;
+  color: var(--text-dim);
+  border: 1px solid var(--gray-border);
+}
+
+.riwayat-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  padding-top: 0.75rem;
+  border-top: 1px dashed var(--gray-border);
+}
+
+.riwayat-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--text-dim);
+  margin: 0 0 0.25rem 0;
+}
+
+.riwayat-value {
+  font-size: 0.85rem;
+  font-weight: 800;
+  color: var(--text);
+  margin: 0;
+}
+
+.riwayat-total {
+  font-size: 1.05rem;
+  font-weight: 900;
+  color: var(--red);
+  margin: 0;
+}
+
+.riwayat-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: auto;
+}
+
+.riwayat-actions button,
+.riwayat-actions a {
+  flex: 1;
+}
+
+/* ============ BADGE STATUS TRANSAKSI ============ */
+.badge-pending {
+  display: inline-block;
+  padding: 0.25rem 0.7rem;
+  background: #fef3c7;
+  color: #92400e;
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  border-radius: 4px;
+}
+
+.badge-diproses {
+  display: inline-block;
+  padding: 0.25rem 0.7rem;
+  background: #dbeafe;
+  color: #1e40af;
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  border-radius: 4px;
+}
+
+.badge-dikirim {
+  display: inline-block;
+  padding: 0.25rem 0.7rem;
+  background: #e0e7ff;
+  color: #4338ca;
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  border-radius: 4px;
+}
+
+.badge-selesai {
+  display: inline-block;
+  padding: 0.25rem 0.7rem;
+  background: #d1fae5;
+  color: #065f46;
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  border-radius: 4px;
+}
+
+.badge-dibatalkan {
+  display: inline-block;
+  padding: 0.25rem 0.7rem;
+  background: #fee2e2;
+  color: #991b1b;
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  border-radius: 4px;
+}
+
+/* ============ STATUS STEPS (PROGRESS) ============ */
+.status-steps {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin: 1rem 0 1.25rem;
+  padding: 0.75rem 0;
+  border-top: 1px dashed var(--gray-border);
+  border-bottom: 1px dashed var(--gray-border);
+}
+
+.status-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1;
+  position: relative;
+}
+
+.status-dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #e0e0e0;
+  border: 2px solid #e0e0e0;
+  margin-bottom: 0.4rem;
+  transition: all 0.3s;
+  z-index: 2;
+}
+
+.status-dot.active {
+  background: var(--red);
+  border-color: var(--red);
+  box-shadow: 0 0 0 4px rgba(230, 0, 18, 0.15);
+}
+
+.status-label {
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-dim);
+  text-align: center;
+  transition: color 0.3s;
+}
+
+.status-label.active {
+  color: var(--red);
+  font-weight: 900;
+}
+
+.status-line {
+  position: absolute;
+  top: 6px;
+  left: 50%;
+  right: -50%;
+  height: 2px;
+  background: #e0e0e0;
+  z-index: 1;
+}
+
+.status-line.active {
+  background: var(--red);
+}
+
 /* ============ RESPONSIVE ============ */
 @media (max-width: 768px) {
   .navbar {
@@ -1439,7 +1873,6 @@ body {
     margin-bottom: 1.5rem;
   }
 
-  /* ===== ADMIN NAVBAR RESPONSIVE ===== */
   .admin-nav-inner {
     padding: 0 1rem;
     height: 60px;
@@ -1616,62 +2049,106 @@ body {
     size: A4 portrait;
   }
 }
-/* ============ CART ITEM DENGAN OVERLAY STOK HABIS ============ */
-.cart-item-img-wrap {
-  position: relative;
-  width: 90px;
-  aspect-ratio: 4 / 3;
-  flex-shrink: 0;
-  overflow: hidden;
-}
 
-.cart-item-img-wrap .cart-item-img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  object-position: center;
-  background: var(--gray);
-  display: block;
-}
-
-.cart-item-overlay {
-  position: absolute;
+/* ============ ALERT MODAL CUSTOM ============ */
+.alert-modal-overlay {
+  position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.7);
+  background: rgba(0, 0, 0, 0.75);
+  z-index: 10000;
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 2;
+  padding: 1.5rem;
+  animation: fadeIn 0.2s ease-out;
 }
 
-.cart-item-overlay span {
-  color: #ffffff;
-  font-size: 0.65rem;
-  font-weight: 900;
-  letter-spacing: 1.5px;
-  text-transform: uppercase;
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.alert-modal {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 2rem 1.75rem 1.5rem;
+  max-width: 440px;
+  width: 100%;
   text-align: center;
-  padding: 0 0.25rem;
-  line-height: 1.2;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+  animation: slideUp 0.3s ease-out;
+  position: relative;
+  overflow: hidden;
 }
 
-.cart-item-habis {
-  background: #fff5f5;
+@keyframes slideUp {
+  from {
+    transform: translateY(30px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
 }
 
-.cart-item-habis .cart-item-nama {
-  text-decoration: line-through;
-  color: var(--text-dim);
+.alert-modal::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #e60012, #ff3355);
 }
-/* ============ SECTION HEADER DENGAN TOMBOL CLOSE ============ */
-.section-header-with-close {
+
+.alert-modal-icon {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
   display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 1rem;
-  margin-bottom: 0.5rem;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 1.25rem;
+  animation: pulseIcon 0.5s ease-out;
 }
 
-.section-header-with-close .divider {
-  margin-bottom: 1.75rem;
+@keyframes pulseIcon {
+  0% { transform: scale(0.5); }
+  70% { transform: scale(1.1); }
+  100% { transform: scale(1); }
+}
+
+.alert-modal-title {
+  font-size: 1.15rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  margin: 0 0 0.75rem 0;
+}
+
+.alert-modal-message {
+  font-size: 0.9rem;
+  color: #666;
+  line-height: 1.6;
+  margin: 0 0 1.75rem 0;
+  white-space: pre-line;
+}
+
+.alert-modal-actions {
+  display: flex;
+  justify-content: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.alert-modal-actions .btn {
+  min-width: 120px;
+  padding: 0.7rem 1.5rem;
+  border-radius: 6px;
+  font-size: 0.8rem;
+}
+
+.alert-modal-actions .btn:hover {
+  filter: brightness(0.9);
 }

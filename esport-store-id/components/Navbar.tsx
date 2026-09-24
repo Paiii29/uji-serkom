@@ -29,6 +29,9 @@ export default function Navbar() {
         </li>
         {user ? (
           <>
+            {user.role === 'customer' && (
+              <li><Link href="/riwayat">Riwayat</Link></li>
+            )}
             <li>
               <span style={{ color: '#fff', fontWeight: 700, fontSize: '0.8rem' }}>
                 Hai, {user.nama}

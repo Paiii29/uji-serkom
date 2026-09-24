@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/context/AuthContext';
 import AdminNavbar from '@/components/AdminNavbar';
+import AlertModal from '@/components/AlertModal';
 
 interface Kategori {
   id: number;
@@ -22,6 +23,37 @@ export default function AdminKategori() {
   const [form, setForm] = useState({ nama: '', deskripsi: '' });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+
+  // Alert state
+  const [alertOpen, setAlertOpen] = useState(false);
+  const [alertType, setAlertType] = useState<'warning' | 'error' | 'success' | 'info' | 'confirm'>('warning');
+  const [alertTitle, setAlertTitle] = useState('');
+  const [alertMessage, setAlertMessage] = useState('');
+  const [alertConfirmAction, setAlertConfirmAction] = useState<(() => void) | null>(null);
+  const [alertShowCancel, setAlertShowCancel] = useState(false);
+
+  const showAlert = (type: 'warning' | 'error' | 'success' | 'info', title: string, message: string) => {
+    setAlertType(type);
+    setAlertTitle(title);
+    setAlertMessage(message);
+    setAlertConfirmAction(null);
+    setAlertShowCancel(false);
+    setAlertOpen(true);
+  };
+
+  const showConfirm = (title: string, message: string, onConfirm: () => void) => {
+    setAlertType('confirm');
+    setAlertTitle(title);
+    setAlertMessage(message);
+    setAlertConfirmAction(() => onConfirm);
+    setAlertShowCancel(true);
+    setAlertOpen(true);
+  };
+
+  const closeAlert = () => {
+    setAlertOpen(false);
+    setAlertConfirmAction(null);
+  };
 
   const fetchKategori = async () => {
     const { data, error } = await supabase
@@ -60,7 +92,6 @@ export default function AdminKategori() {
     setLoading(true);
 
     if (editId) {
-      // UPDATE
       const { error } = await supabase
         .from('kategori')
         .update(form)
@@ -70,42 +101,70 @@ export default function AdminKategori() {
         setLoading(false);
         return;
       }
+      setModalOpen(false);
+      showAlert('success', 'Berhasil', 'Kategori berhasil diupdate.');
     } else {
-      // INSERT
       const { error } = await supabase.from('kategori').insert(form);
       if (error) {
         setError('Gagal tambah: ' + error.message);
         setLoading(false);
         return;
       }
+      setModalOpen(false);
+      showAlert('success', 'Berhasil', 'Kategori berhasil ditambahkan.');
     }
 
     setLoading(false);
-    setModalOpen(false);
     setForm({ nama: '', deskripsi: '' });
     setEditId(null);
     fetchKategori();
   };
 
   const handleHapus = async (id: number, nama: string) => {
-    // Cek apakah kategori masih dipakai produk
     const { data: produkPakai } = await supabase
       .from('produk')
       .select('id')
       .eq('kategori', nama);
 
     if (produkPakai && produkPakai.length > 0) {
-      alert(
-        `Tidak bisa hapus kategori "${nama}".\nMasih ada ${produkPakai.length} produk yang memakai kategori ini.`
+      showAlert(
+        'warning',
+        'Tidak Bisa Dihapus',
+        `Kategori "${nama}" masih dipakai oleh ${produkPakai.length} produk aktif.\n\nPindahkan atau hapus produk tersebut terlebih dahulu.`
       );
       return;
     }
 
-    if (!confirm(`Yakin hapus kategori "${nama}"?`)) return;
+    const { data: transaksi } = await supabase
+      .from('transaksi')
+      .select('id, items');
 
-    const { error } = await supabase.from('kategori').delete().eq('id', id);
-    if (error) alert('Gagal hapus: ' + error.message);
-    else fetchKategori();
+    const pernahTerjual = (transaksi || []).some((trx: any) =>
+      trx.items?.some((item: any) => item.kategori === nama)
+    );
+
+    if (pernahTerjual) {
+      showAlert(
+        'warning',
+        'Tidak Bisa Dihapus',
+        `Kategori "${nama}" sudah pernah ada di riwayat transaksi.\n\nMenghapusnya akan merusak riwayat transaksi customer.`
+      );
+      return;
+    }
+
+    showConfirm(
+      'Hapus Kategori?',
+      `Yakin ingin menghapus kategori "${nama}"?\n\nTindakan ini tidak dapat dibatalkan.`,
+      async () => {
+        const { error } = await supabase.from('kategori').delete().eq('id', id);
+        if (error) {
+          showAlert('error', 'Gagal Hapus', error.message);
+        } else {
+          showAlert('success', 'Berhasil', `Kategori "${nama}" berhasil dihapus.`);
+          fetchKategori();
+        }
+      }
+    );
   };
 
   if (!user) return null;
@@ -143,7 +202,6 @@ export default function AdminKategori() {
         )}
       </div>
 
-      {/* MODAL */}
       {modalOpen && (
         <div className="modal-overlay" onClick={() => setModalOpen(false)}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
@@ -193,6 +251,17 @@ export default function AdminKategori() {
           </div>
         </div>
       )}
+
+      <AlertModal
+        open={alertOpen}
+        type={alertType}
+        title={alertTitle}
+        message={alertMessage}
+        onClose={closeAlert}
+        onConfirm={alertConfirmAction || undefined}
+        showCancel={alertShowCancel}
+        confirmText={alertShowCancel ? 'Ya, Hapus' : 'Mengerti'}
+      />
     </div>
   );
 }

@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/context/AuthContext';
 import AdminNavbar from '@/components/AdminNavbar';
+import AlertModal from '@/components/AlertModal';
 
 interface Produk {
   id: number;
@@ -34,15 +35,45 @@ export default function AdminProduk() {
   const [fileError, setFileError] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Form pakai string untuk harga & stok (biar bisa kosong)
+  // Alert Modal state
+  const [alertOpen, setAlertOpen] = useState(false);
+  const [alertType, setAlertType] = useState<'warning' | 'error' | 'success' | 'info' | 'confirm'>('warning');
+  const [alertTitle, setAlertTitle] = useState('');
+  const [alertMessage, setAlertMessage] = useState('');
+  const [alertConfirmAction, setAlertConfirmAction] = useState<(() => void) | null>(null);
+  const [alertShowCancel, setAlertShowCancel] = useState(false);
+
   const [form, setForm] = useState({
     nama: '',
     kategori: '',
-    harga: '',      // string biar bisa kosong & di-format
-    stok: '',       // string biar bisa kosong
+    harga: '',
+    stok: '',
     deskripsi: '',
     gambar: '',
   });
+
+  const showAlert = (type: 'warning' | 'error' | 'success' | 'info', title: string, message: string) => {
+    setAlertType(type);
+    setAlertTitle(title);
+    setAlertMessage(message);
+    setAlertConfirmAction(null);
+    setAlertShowCancel(false);
+    setAlertOpen(true);
+  };
+
+  const showConfirm = (title: string, message: string, onConfirm: () => void) => {
+    setAlertType('confirm');
+    setAlertTitle(title);
+    setAlertMessage(message);
+    setAlertConfirmAction(() => onConfirm);
+    setAlertShowCancel(true);
+    setAlertOpen(true);
+  };
+
+  const closeAlert = () => {
+    setAlertOpen(false);
+    setAlertConfirmAction(null);
+  };
 
   const fetchData = async () => {
     const [p, k] = await Promise.all([
@@ -74,7 +105,7 @@ export default function AdminProduk() {
     setForm({
       nama: p.nama,
       kategori: p.kategori,
-      harga: formatRupiah(p.harga),   // tampilkan dengan titik
+      harga: formatRupiah(p.harga),
       stok: String(p.stok),
       deskripsi: p.deskripsi,
       gambar: p.gambar,
@@ -84,37 +115,23 @@ export default function AdminProduk() {
     setModalOpen(true);
   };
 
-  // ============================================
-  // FORMAT ANGKA JADI RUPIAH (5.000 / 10.000)
-  // ============================================
   const formatRupiah = (angka: number | string): string => {
     const num = typeof angka === 'string' ? angka.replace(/\D/g, '') : String(angka);
     if (!num) return '';
     return Number(num).toLocaleString('id-ID');
   };
 
-  // ============================================
-  // HANDLE INPUT HARGA (auto-format dengan titik)
-  // ============================================
   const handleHargaChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    // Ambil hanya angka (hapus titik/koma/spasi)
     const raw = e.target.value.replace(/\D/g, '');
-    // Format dengan titik ribuan
     const formatted = raw ? Number(raw).toLocaleString('id-ID') : '';
     setForm({ ...form, harga: formatted });
   };
 
-  // ============================================
-  // HANDLE INPUT STOK (hanya angka)
-  // ============================================
   const handleStokChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const raw = e.target.value.replace(/\D/g, '');
     setForm({ ...form, stok: raw });
   };
 
-  // ============================================
-  // HANDLE UPLOAD FOTO
-  // ============================================
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -156,14 +173,11 @@ export default function AdminProduk() {
     setUploading(false);
   };
 
-  // ============================================
-  // SUBMIT
-  // ============================================
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (uploading) {
-      alert('Tunggu, foto masih diupload...');
+      showAlert('info', 'Tunggu Sebentar', 'Foto masih diupload, mohon tunggu.');
       return;
     }
     if (!form.gambar) {
@@ -171,16 +185,15 @@ export default function AdminProduk() {
       return;
     }
 
-    // Convert harga & stok dari string ke number
     const hargaNum = Number(form.harga.replace(/\D/g, ''));
     const stokNum = Number(form.stok);
 
     if (!hargaNum || hargaNum <= 0) {
-      alert('Harga harus diisi dan lebih dari 0');
+      showAlert('warning', 'Harga Tidak Valid', 'Harga harus diisi dan lebih dari 0.');
       return;
     }
     if (stokNum < 0) {
-      alert('Stok tidak boleh negatif');
+      showAlert('warning', 'Stok Tidak Valid', 'Stok tidak boleh negatif.');
       return;
     }
 
@@ -200,25 +213,60 @@ export default function AdminProduk() {
         .from('produk')
         .update(dataKirim)
         .eq('id', editId);
-      if (error) alert('Gagal update: ' + error.message);
+      if (error) {
+        showAlert('error', 'Gagal Update', error.message);
+      } else {
+        setModalOpen(false);
+        showAlert('success', 'Berhasil', 'Produk berhasil diupdate.');
+      }
     } else {
       const { error } = await supabase.from('produk').insert(dataKirim);
-      if (error) alert('Gagal tambah: ' + error.message);
+      if (error) {
+        showAlert('error', 'Gagal Tambah', error.message);
+      } else {
+        setModalOpen(false);
+        showAlert('success', 'Berhasil', 'Produk berhasil ditambahkan.');
+      }
     }
 
     setLoading(false);
-    setModalOpen(false);
     setForm({ nama: '', kategori: '', harga: '', stok: '', deskripsi: '', gambar: '' });
     setPreview('');
     setEditId(null);
     fetchData();
   };
 
-  const handleHapus = async (id: number) => {
-    if (!confirm('Yakin hapus produk ini?')) return;
-    const { error } = await supabase.from('produk').delete().eq('id', id);
-    if (error) alert('Gagal hapus: ' + error.message);
-    else fetchData();
+  const handleHapus = async (id: number, nama: string) => {
+    const { data: transaksi } = await supabase
+      .from('transaksi')
+      .select('id, items');
+
+    const pernahTerjual = (transaksi || []).some((trx: any) =>
+      trx.items?.some((item: any) => item.id === id)
+    );
+
+    if (pernahTerjual) {
+      showAlert(
+        'warning',
+        'Tidak Bisa Dihapus',
+        `Produk "${nama}" sudah pernah terjual di transaksi sebelumnya.\n\nMenghapusnya akan merusak riwayat transaksi customer.`
+      );
+      return;
+    }
+
+    showConfirm(
+      'Hapus Produk?',
+      `Yakin ingin menghapus produk "${nama}"?\n\nTindakan ini tidak dapat dibatalkan.`,
+      async () => {
+        const { error } = await supabase.from('produk').delete().eq('id', id);
+        if (error) {
+          showAlert('error', 'Gagal Hapus', error.message);
+        } else {
+          showAlert('success', 'Berhasil', `Produk "${nama}" berhasil dihapus.`);
+          fetchData();
+        }
+      }
+    );
   };
 
   if (!user) return null;
@@ -247,7 +295,7 @@ export default function AdminProduk() {
                 <p style={{ fontSize: '0.8rem', color: 'var(--text-dim)', marginBottom: '0.75rem' }}>Stok: {p.stok}</p>
                 <div className="produk-admin-actions">
                   <button onClick={() => bukaEdit(p)} className="btn btn-sm">Edit</button>
-                  <button onClick={() => handleHapus(p.id)} className="btn btn-sm btn-danger">Hapus</button>
+                  <button onClick={() => handleHapus(p.id, p.nama)} className="btn btn-sm btn-danger">Hapus</button>
                 </div>
               </div>
             ))}
@@ -255,7 +303,6 @@ export default function AdminProduk() {
         )}
       </div>
 
-      {/* MODAL */}
       {modalOpen && (
         <div className="modal-overlay" onClick={() => setModalOpen(false)}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
@@ -372,6 +419,17 @@ export default function AdminProduk() {
           </div>
         </div>
       )}
+
+      <AlertModal
+        open={alertOpen}
+        type={alertType}
+        title={alertTitle}
+        message={alertMessage}
+        onClose={closeAlert}
+        onConfirm={alertConfirmAction || undefined}
+        showCancel={alertShowCancel}
+        confirmText={alertShowCancel ? 'Ya, Hapus' : 'Mengerti'}
+      />
     </div>
   );
 }

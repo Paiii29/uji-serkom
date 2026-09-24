@@ -6,6 +6,7 @@ import { supabase } from '@/lib/supabase';
 import { useCart } from '@/context/CartContext';
 import { useAuth } from '@/context/AuthContext';
 import Navbar from '@/components/Navbar';
+import AlertModal from '@/components/AlertModal';
 
 interface Produk {
   id: number;
@@ -24,7 +25,37 @@ export default function DetailProduk() {
   const { user } = useAuth();
   const [produk, setProduk] = useState<Produk | null>(null);
   const [qty, setQty] = useState(1);
-  const [loginModal, setLoginModal] = useState(false);
+
+  // Alert state
+  const [alertOpen, setAlertOpen] = useState(false);
+  const [alertType, setAlertType] = useState<'warning' | 'error' | 'success' | 'info' | 'confirm'>('warning');
+  const [alertTitle, setAlertTitle] = useState('');
+  const [alertMessage, setAlertMessage] = useState('');
+  const [alertConfirmAction, setAlertConfirmAction] = useState<(() => void) | null>(null);
+  const [alertShowCancel, setAlertShowCancel] = useState(false);
+
+  const showAlert = (type: 'warning' | 'error' | 'success' | 'info', title: string, message: string) => {
+    setAlertType(type);
+    setAlertTitle(title);
+    setAlertMessage(message);
+    setAlertConfirmAction(null);
+    setAlertShowCancel(false);
+    setAlertOpen(true);
+  };
+
+  const showConfirm = (title: string, message: string, onConfirm: () => void) => {
+    setAlertType('confirm');
+    setAlertTitle(title);
+    setAlertMessage(message);
+    setAlertConfirmAction(() => onConfirm);
+    setAlertShowCancel(true);
+    setAlertOpen(true);
+  };
+
+  const closeAlert = () => {
+    setAlertOpen(false);
+    setAlertConfirmAction(null);
+  };
 
   useEffect(() => {
     async function fetchProduk() {
@@ -51,31 +82,28 @@ export default function DetailProduk() {
 
   const handleAddToCart = () => {
     if (!user) {
-      setLoginModal(true);
+      showConfirm(
+        'Login Dulu Yuk!',
+        'Untuk membeli produk atau menambah ke keranjang, kamu harus login terlebih dahulu.\n\nBelum punya akun? Silakan daftar dulu gratis.',
+        () => router.push('/login')
+      );
       return;
     }
 
     if (habis) {
-      alert('Stok produk habis');
+      showAlert('warning', 'Stok Habis', 'Stok produk ini sudah habis.');
       return;
     }
     if (qty > produk.stok) {
-      alert(`Stok tidak cukup. Tersisa: ${produk.stok}`);
+      showAlert('warning', 'Stok Tidak Cukup', `Stok tidak cukup. Tersisa: ${produk.stok}`);
       return;
     }
+
     addToCart(produk, qty);
-    alert('Produk berhasil ditambahkan ke keranjang!');
-    router.push('/keranjang');
-  };
-
-  const keLogin = () => {
-    setLoginModal(false);
-    router.push('/login');
-  };
-
-  const keDaftar = () => {
-    setLoginModal(false);
-    router.push('/register');
+    showAlert('success', 'Berhasil', 'Produk berhasil ditambahkan ke keranjang!');
+    setTimeout(() => {
+      router.push('/keranjang');
+    }, 1000);
   };
 
   return (
@@ -132,49 +160,16 @@ export default function DetailProduk() {
         </div>
       </div>
 
-      {/* MODAL LOGIN REQUIRED */}
-      {loginModal && (
-        <div className="modal-overlay" onClick={() => setLoginModal(false)}>
-          <div
-            className="modal-content"
-            onClick={(e) => e.stopPropagation()}
-            style={{ maxWidth: '420px', textAlign: 'center', borderTop: '6px solid var(--red)' }}
-          >
-            <h2 className="modal-title" style={{ textAlign: 'center', marginBottom: '1rem' }}>
-              Login Dulu Yuk!
-            </h2>
-            <p style={{ color: 'var(--text-dim)', fontSize: '0.9rem', marginBottom: '1.5rem', lineHeight: 1.6 }}>
-              Untuk membeli produk atau menambah ke keranjang, kamu harus <strong>login</strong> terlebih dahulu.
-              <br /><br />
-              Belum punya akun? Silakan daftar dulu gratis.
-            </p>
-
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-              <button onClick={keLogin} className="btn btn-block">
-                Login Sekarang
-              </button>
-              <button onClick={keDaftar} className="btn btn-outline btn-block">
-                Daftar Akun Baru
-              </button>
-              <button
-                onClick={() => setLoginModal(false)}
-                style={{
-                  background: 'transparent',
-                  border: 'none',
-                  color: 'var(--text-dim)',
-                  fontSize: '0.8rem',
-                  fontWeight: 700,
-                  cursor: 'pointer',
-                  textDecoration: 'underline',
-                  marginTop: '0.25rem',
-                }}
-              >
-                Nanti saja
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <AlertModal
+        open={alertOpen}
+        type={alertType}
+        title={alertTitle}
+        message={alertMessage}
+        onClose={closeAlert}
+        onConfirm={alertConfirmAction || undefined}
+        showCancel={alertShowCancel}
+        confirmText={alertShowCancel ? 'Login Sekarang' : 'Mengerti'}
+      />
     </>
   );
 }
