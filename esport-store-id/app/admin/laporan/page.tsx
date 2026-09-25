@@ -189,6 +189,31 @@ export default function AdminLaporan() {
     });
   };
 
+  // Fungsi untuk memformat tanggal filter (tanpa jam) agar rapi di struk cetak
+  const formatTanggalFilter = (dateStr: string) => {
+    if (!dateStr) return '';
+    const d = new Date(dateStr);
+    return d.toLocaleDateString('id-ID', {
+      day: '2-digit',
+      month: 'long',
+      year: 'numeric',
+    });
+  };
+
+  // Teks dinamis untuk header cetak
+  const teksPeriode = (() => {
+    if (filterAwal && filterAkhir) {
+      return `Laporan Penjualan dari tanggal ${formatTanggalFilter(filterAwal)} sampai tanggal ${formatTanggalFilter(filterAkhir)}`;
+    }
+    if (filterAwal) {
+      return `Laporan Penjualan dari tanggal ${formatTanggalFilter(filterAwal)} sampai sekarang`;
+    }
+    if (filterAkhir) {
+      return `Laporan Penjualan sampai tanggal ${formatTanggalFilter(filterAkhir)}`;
+    }
+    return `Laporan Penjualan dari tanggal 1 sampai tanggal ${new Date().toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' })}`;
+  })();
+
   const getStatusClass = (status: string) => {
     switch (status) {
       case 'Pending': return 'badge-pending';
@@ -213,6 +238,11 @@ export default function AdminLaporan() {
           <h1>ESPORT STORE ID</h1>
           <p>Laporan Penjualan</p>
           <p>Dicetak: {new Date().toLocaleDateString('id-ID', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' })}</p>
+          
+          {/* TEKS PERIODE - RAPI & MENYATU DENGAN HEADER */}
+          <p style={{ marginTop: '0.3rem' }}>
+            {teksPeriode}
+          </p>
         </div>
 
         <div className="admin-header no-print">

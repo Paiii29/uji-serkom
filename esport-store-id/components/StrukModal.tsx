@@ -16,6 +16,7 @@ interface Transaksi {
   }[];
   total: number;
   tanggal: string;
+  metode_pembayaran?: string;
 }
 
 interface StrukModalProps {
@@ -36,7 +37,6 @@ export default function StrukModal({ transaksi, onClose }: StrukModalProps) {
   };
 
   const handlePrint = () => {
-    // Buat iframe tersembunyi untuk print
     const iframe = document.createElement('iframe');
     iframe.style.position = 'fixed';
     iframe.style.right = '0';
@@ -49,7 +49,6 @@ export default function StrukModal({ transaksi, onClose }: StrukModalProps) {
     const doc = iframe.contentWindow?.document;
     if (!doc) return;
 
-    // HTML struk untuk print
     const htmlContent = `
       <!DOCTYPE html>
       <html>
@@ -150,6 +149,7 @@ export default function StrukModal({ transaksi, onClose }: StrukModalProps) {
           <div class="struk-info">
             <p><strong>No. Transaksi:</strong> #${transaksi.id}</p>
             <p><strong>Tanggal:</strong> ${formatTanggal(transaksi.tanggal)}</p>
+            <p><strong>Metode Pembayaran:</strong> ${transaksi.metode_pembayaran || '-'}</p>
           </div>
 
           <div class="struk-divider"></div>
@@ -212,12 +212,10 @@ export default function StrukModal({ transaksi, onClose }: StrukModalProps) {
     doc.write(htmlContent);
     doc.close();
 
-    // Tunggu konten render, baru print
     iframe.onload = () => {
       iframe.contentWindow?.focus();
       iframe.contentWindow?.print();
 
-      // Hapus iframe setelah print
       setTimeout(() => {
         document.body.removeChild(iframe);
       }, 1000);
@@ -252,6 +250,7 @@ export default function StrukModal({ transaksi, onClose }: StrukModalProps) {
           <div className="struk-info">
             <p><strong>No. Transaksi:</strong> #{transaksi.id}</p>
             <p><strong>Tanggal:</strong> {formatTanggal(transaksi.tanggal)}</p>
+            <p><strong>Metode Pembayaran:</strong> {transaksi.metode_pembayaran || '-'}</p>
           </div>
 
           <div className="struk-divider"></div>

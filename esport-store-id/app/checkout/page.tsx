@@ -6,6 +6,7 @@ import { supabase } from '@/lib/supabase';
 import { useCart } from '@/context/CartContext';
 import { useAuth } from '@/context/AuthContext';
 import Navbar from '@/components/Navbar';
+import AlertModal from '@/components/AlertModal';
 
 export default function Checkout() {
   const { cart, checkoutItems, setCheckoutItems, hapusItemCheckout } = useCart();
@@ -17,11 +18,33 @@ export default function Checkout() {
     email: '',
     telepon: '',
     alamat: '',
+    metode: '',
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
 
-  // Auto-fill nama & email dari user yang login
+  // Alert state
+  const [alertOpen, setAlertOpen] = useState(false);
+  const [alertType, setAlertType] = useState<'warning' | 'error' | 'success' | 'info' | 'confirm'>('warning');
+  const [alertTitle, setAlertTitle] = useState('');
+  const [alertMessage, setAlertMessage] = useState('');
+  const [alertConfirmAction, setAlertConfirmAction] = useState<(() => void) | null>(null);
+  const [alertShowCancel, setAlertShowCancel] = useState(false);
+
+  const showAlert = (type: 'warning' | 'error' | 'success' | 'info', title: string, message: string) => {
+    setAlertType(type);
+    setAlertTitle(title);
+    setAlertMessage(message);
+    setAlertConfirmAction(null);
+    setAlertShowCancel(false);
+    setAlertOpen(true);
+  };
+
+  const closeAlert = () => {
+    setAlertOpen(false);
+    setAlertConfirmAction(null);
+  };
+
   useEffect(() => {
     if (user) {
       setForm((prev) => ({
@@ -41,6 +64,7 @@ export default function Checkout() {
     if (!form.email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) err.email = 'Email tidak valid';
     if (!form.telepon.match(/^[0-9]{10,13}$/)) err.telepon = 'Telepon harus 10-13 digit angka';
     if (!form.alamat.trim()) err.alamat = 'Alamat wajib diisi';
+    if (!form.metode) err.metode = 'Metode pembayaran wajib dipilih';
     setErrors(err);
     return Object.keys(err).length === 0;
   };
@@ -62,11 +86,11 @@ export default function Checkout() {
         .single();
 
       if (!produkDb) {
-        alert(`Produk ${item.nama} tidak ditemukan.`);
+        showAlert('error', 'Produk Tidak Ditemukan', `Produk ${item.nama} tidak ditemukan.`);
         return;
       }
       if (produkDb.stok < item.qty) {
-        alert(`Stok "${item.nama}" tidak cukup. Tersisa: ${produkDb.stok}, diminta: ${item.qty}`);
+        showAlert('warning', 'Stok Tidak Cukup', `Stok "${item.nama}" tidak cukup. Tersisa: ${produkDb.stok}, diminta: ${item.qty}`);
         return;
       }
     }
@@ -80,12 +104,13 @@ export default function Checkout() {
         items: items,
         total: total,
         status: 'Pending',
+        metode_pembayaran: form.metode,
       })
       .select()
       .single();
 
     if (trxError) {
-      alert('Checkout gagal: ' + trxError.message);
+      showAlert('error', 'Checkout Gagal', trxError.message);
       setLoading(false);
       return;
     }
@@ -254,6 +279,31 @@ export default function Checkout() {
             {errors.alamat && <p className="form-error">{errors.alamat}</p>}
           </div>
 
+          {/* METODE PEMBAYARAN */}
+          <div className="form-group">
+            <label className="form-label">Metode Pembayaran</label>
+            <div className="metode-pembayaran-grid">
+              {[
+                { value: 'Transfer Bank', label: 'Transfer Bank', desc: 'BCA, BRI, Mandiri' },
+                { value: 'COD', label: 'COD', desc: 'Bayar di tempat' },
+                { value: 'DANA', label: 'DANA', desc: 'E-Wallet' },
+                { value: 'OVO', label: 'OVO', desc: 'E-Wallet' },
+                { value: 'GoPay', label: 'GoPay', desc: 'E-Wallet' },
+                { value: 'QRIS', label: 'QRIS', desc: 'Scan QR' },
+              ].map((m) => (
+                <div
+                  key={m.value}
+                  className={`metode-card ${form.metode === m.value ? 'active' : ''}`}
+                  onClick={() => setForm({ ...form, metode: m.value })}
+                >
+                  <p className="metode-label">{m.label}</p>
+                  <p className="metode-desc">{m.desc}</p>
+                </div>
+              ))}
+            </div>
+            {errors.metode && <p className="form-error">{errors.metode}</p>}
+          </div>
+
           <div className="cart-total" style={{ marginBottom: '1.5rem' }}>
             <p className="cart-total-label">Total Bayar</p>
             <p className="cart-total-amount">Rp {total.toLocaleString('id-ID')}</p>
@@ -264,6 +314,17 @@ export default function Checkout() {
           </button>
         </form>
       </div>
+
+      <AlertModal
+        open={alertOpen}
+        type={alertType}
+        title={alertTitle}
+        message={alertMessage}
+        onClose={closeAlert}
+        onConfirm={alertConfirmAction || undefined}
+        showCancel={alertShowCancel}
+        confirmText="Mengerti"
+      />
     </>
   );
 }

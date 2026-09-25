@@ -56,12 +56,22 @@ export default function AdminKategori() {
   };
 
   const fetchKategori = async () => {
-    const { data, error } = await supabase
-      .from('kategori')
-      .select('*')
-      .order('nama', { ascending: true });
-    if (error) console.error(error);
-    else setKategori(data || []);
+    try {
+      const { data, error } = await supabase
+        .from('kategori')
+        .select('*')
+        .order('nama', { ascending: true });
+      
+      if (error) {
+        console.error('Error fetch kategori:', error);
+        showAlert('error', 'Gagal Memuat', error.message);
+      } else {
+        setKategori(data || []);
+      }
+    } catch (err) {
+      console.error('Unexpected error:', err);
+      showAlert('error', 'Gagal Memuat', 'Terjadi kesalahan tidak terduga.');
+    }
   };
 
   useEffect(() => {
@@ -91,36 +101,49 @@ export default function AdminKategori() {
     setError('');
     setLoading(true);
 
-    if (editId) {
-      const { error } = await supabase
-        .from('kategori')
-        .update(form)
-        .eq('id', editId);
-      if (error) {
-        setError('Gagal update: ' + error.message);
-        setLoading(false);
-        return;
+    try {
+      if (editId) {
+        // UPDATE
+        const { error } = await supabase
+          .from('kategori')
+          .update({ nama: form.nama, deskripsi: form.deskripsi })
+          .eq('id', editId);
+        
+        if (error) {
+          setError('Gagal update: ' + error.message);
+          setLoading(false);
+          return;
+        }
+        setModalOpen(false);
+        showAlert('success', 'Berhasil', 'Kategori berhasil diupdate.');
+      } else {
+        // INSERT
+        const { error } = await supabase
+          .from('kategori')
+          .insert({ nama: form.nama, deskripsi: form.deskripsi });
+        
+        if (error) {
+          setError('Gagal tambah: ' + error.message);
+          setLoading(false);
+          return;
+        }
+        setModalOpen(false);
+        showAlert('success', 'Berhasil', 'Kategori berhasil ditambahkan.');
       }
-      setModalOpen(false);
-      showAlert('success', 'Berhasil', 'Kategori berhasil diupdate.');
-    } else {
-      const { error } = await supabase.from('kategori').insert(form);
-      if (error) {
-        setError('Gagal tambah: ' + error.message);
-        setLoading(false);
-        return;
-      }
-      setModalOpen(false);
-      showAlert('success', 'Berhasil', 'Kategori berhasil ditambahkan.');
-    }
 
-    setLoading(false);
-    setForm({ nama: '', deskripsi: '' });
-    setEditId(null);
-    fetchKategori();
+      setForm({ nama: '', deskripsi: '' });
+      setEditId(null);
+      fetchKategori();
+    } catch (err) {
+      console.error('Unexpected error:', err);
+      setError('Terjadi kesalahan tidak terduga.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleHapus = async (id: number, nama: string) => {
+    // Cek apakah kategori dipakai di produk
     const { data: produkPakai } = await supabase
       .from('produk')
       .select('id')
@@ -135,6 +158,7 @@ export default function AdminKategori() {
       return;
     }
 
+    // Cek apakah kategori pernah ada di transaksi
     const { data: transaksi } = await supabase
       .from('transaksi')
       .select('id, items');

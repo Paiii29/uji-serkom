@@ -2152,3 +2152,56 @@ body {
 .alert-modal-actions .btn:hover {
   filter: brightness(0.9);
 }
+/* ============ METODE PEMBAYARAN ============ */
+.metode-pembayaran-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+}
+
+.metode-card {
+  padding: 1rem;
+  border: 2px solid var(--gray-border);
+  background: #ffffff;
+  cursor: pointer;
+  transition: all 0.3s;
+  text-align: center;
+  clip-path: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px);
+}
+
+.metode-card:hover {
+  border-color: var(--red);
+  transform: translateY(-2px);
+}
+
+.metode-card.active {
+  border-color: var(--red);
+  background: linear-gradient(135deg, rgba(230, 0, 18, 0.05), rgba(230, 0, 18, 0.1));
+  box-shadow: 0 0 0 3px rgba(230, 0, 18, 0.15);
+}
+
+.metode-label {
+  font-weight: 800;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--text);
+  margin: 0 0 0.25rem 0;
+}
+
+.metode-card.active .metode-label {
+  color: var(--red);
+}
+
+.metode-desc {
+  font-size: 0.7rem;
+  color: var(--text-dim);
+  margin: 0;
+}
+
+@media (max-width: 480px) {
+  .metode-pembayaran-grid {
+    grid-template-columns: 1fr;
+  }
+}
